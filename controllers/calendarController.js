@@ -98,7 +98,7 @@ const setUserSelections = async (req, res) => {
 
         const counts = await Promise.all(countPromises);
         for (let i = 0; i < counts.length; i++) {
-            if (counts[i] >= 7) {
+            if (counts[i] >= 4) {
                 return res.status(400).json({
                     message: `El turno ${selections[i].day} ${selections[i].hour} ya está completo.`
                 });
