@@ -107,8 +107,8 @@ const setUserSelections = async (req, res) => {
 
         // Aplicar cambio temporal
         if (userSelection.lastChange && sameMonth(now, userSelection.lastChange)) {
-            if (userSelection.changesThisMonth >= 2) {
-                return res.status(403).json({ message: 'Ya alcanzaste el límite de 2 cambios este mes.' });
+            if (userSelection.changesThisMonth >= 3) {
+                return res.status(403).json({ message: 'Ya alcanzaste el límite de 3 cambios este mes.' });
             }
             userSelection.changesThisMonth += 1;
         } else {
@@ -499,8 +499,8 @@ const guardarTurnoParaRecuperar = async (req, res) => {
         userSelection.lastChange.getFullYear() === hoy.getFullYear();
 
         if (sameMonth) {
-                if (userSelection.changesThisMonth >= 2) {
-                    return res.status(403).json({ message: 'Ya alcanzaste el límite de 2 cambios este mes.' });
+                if (userSelection.changesThisMonth >= 3) {
+                    return res.status(403).json({ message: 'Ya alcanzaste el límite de 3 cambios este mes.' });
                 } else {
                     userSelection.changesThisMonth += 1;
                 }
