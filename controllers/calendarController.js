@@ -105,10 +105,25 @@ const setUserSelections = async (req, res) => {
             }
         }
 
-        // Aplicar cambio temporal
+        /*// Aplicar cambio temporal (volver al original mes proximo)
         if (userSelection.lastChange && sameMonth(now, userSelection.lastChange)) {
             if (userSelection.changesThisMonth >= 2) {
                 return res.status(403).json({ message: 'Ya alcanzaste el límite de 2 cambios este mes.' });
+            }
+            userSelection.changesThisMonth += 1;
+        } else {
+            userSelection.changesThisMonth = 1;
+        }*/
+
+        if (userSelection.lastChange && sameMonth(now, userSelection.lastChange)) {
+            // Verificar si tiene viernes en sus turnos originales
+            const tieneViernes = userSelection.originalSelections.some(sel => sel.day === 'Viernes');
+            const limiteMaximo = tieneViernes ? 3 : 2;
+            
+            if (userSelection.changesThisMonth >= limiteMaximo) {
+                return res.status(403).json({ 
+                    message: `Ya alcanzaste el límite de ${limiteMaximo} cambios este mes.` 
+                });
             }
             userSelection.changesThisMonth += 1;
         } else {
@@ -498,7 +513,7 @@ const guardarTurnoParaRecuperar = async (req, res) => {
         userSelection.lastChange.getMonth() === hoy.getMonth() &&
         userSelection.lastChange.getFullYear() === hoy.getFullYear();
 
-        if (sameMonth) {
+        /*if (sameMonth) {
                 if (userSelection.changesThisMonth >= 2) {
                     return res.status(403).json({ message: 'Ya alcanzaste el límite de 2 cambios este mes.' });
                 } else {
@@ -506,24 +521,40 @@ const guardarTurnoParaRecuperar = async (req, res) => {
                 }
             } else {
                 userSelection.changesThisMonth = 1;
+            }*/
+        
+        if (sameMonth) {
+            // Verificar si tiene viernes en sus turnos originales
+            const tieneViernes = userSelection.originalSelections.some(sel => sel.day === 'Viernes');
+            const limiteMaximo = tieneViernes ? 3 : 2;
+            
+            if (userSelection.changesThisMonth >= limiteMaximo) {
+                return res.status(403).json({ 
+                    message: `Ya alcanzaste el límite de ${limiteMaximo} cambios este mes.` 
+                });
+            } else {
+                userSelection.changesThisMonth += 1;
             }
+        } else {
+            userSelection.changesThisMonth = 1;
+        }
 
-            userSelection.lastChange = hoy;
+        userSelection.lastChange = hoy;
 
-            const mondayOfWeek = new Date();
-            mondayOfWeek.setDate(mondayOfWeek.getDate() - ((mondayOfWeek.getDay() + 6) % 7));
+        const mondayOfWeek = new Date();
+        mondayOfWeek.setDate(mondayOfWeek.getDate() - ((mondayOfWeek.getDay() + 6) % 7));
 
-            const nuevo = new RecoverableTurn({
-                user: userId,
-                originalDay: day,
-                originalHour: hour,
-                cancelledWeek: mondayOfWeek
-            });
+        const nuevo = new RecoverableTurn({
+            user: userId,
+            originalDay: day,
+            originalHour: hour,
+            cancelledWeek: mondayOfWeek
+        });
 
-            await userSelection.save();
-            await nuevo.save();
+        await userSelection.save();
+        await nuevo.save();
 
-            return res.json({ message: 'Turno guardado para recuperar.' });
+        return res.json({ message: 'Turno guardado para recuperar.' });
 
     } catch (err) {
         console.error(err);
